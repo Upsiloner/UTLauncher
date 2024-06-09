@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: backend-img
+    container_name: backend-cont
+    env_file: .env
+    ports:
+      - "$PORT:$PORT"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - UniTrace-dev-network
+    volumes:
+      - ./backend/:/app
+      - ./.env:/app/.env
+
+  postgres:
+    image: postgres:13-alpine
+    container_name: postgres_cont
+    env_file: .env
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=$DB_USER
+      - POSTGRES_PASSWORD=$DB_PASS
+      - POSTGRES_DB=$DB_NAME
+    ports:
+      - "$DB_PORT:$DB_PORT"
+    networks:
+      - UniTrace-dev-network
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6.0-alpine
+    container_name: redis_cont
+    env_file: .env
+    ports:
+      - "$REDIS_PORT:$REDIS_PORT"
+    environment:
+      - REDIS_PASSWORD=$REDIS_PASS
+    networks:
+      - UniTrace-dev-network
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  UniTrace-dev-network:
+    driver: bridge
